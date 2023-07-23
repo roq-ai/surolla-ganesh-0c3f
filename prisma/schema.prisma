@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model client {
+  id                      String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                    String   @db.VarChar(255)
+  contact_info            String   @db.VarChar(255)
+  sales_representative_id String?  @db.Uuid
+  created_at              DateTime @default(now()) @db.Timestamp(6)
+  updated_at              DateTime @default(now()) @db.Timestamp(6)
+  user                    user?    @relation(fields: [sales_representative_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model export_order {
+  id                                              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  status                                          String   @db.VarChar(255)
+  sales_representative_id                         String?  @db.Uuid
+  export_manager_id                               String?  @db.Uuid
+  created_at                                      DateTime @default(now()) @db.Timestamp(6)
+  updated_at                                      DateTime @default(now()) @db.Timestamp(6)
+  user_export_order_export_manager_idTouser       user?    @relation("export_order_export_manager_idTouser", fields: [export_manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_export_order_sales_representative_idTouser user?    @relation("export_order_sales_representative_idTouser", fields: [sales_representative_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model organization {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  image       String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model quality_check {
+  id                         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  batch_number               String   @db.VarChar(255)
+  approval_status            String   @db.VarChar(255)
+  quality_control_officer_id String?  @db.Uuid
+  created_at                 DateTime @default(now()) @db.Timestamp(6)
+  updated_at                 DateTime @default(now()) @db.Timestamp(6)
+  user                       user?    @relation(fields: [quality_control_officer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                                                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                                   String          @unique @db.VarChar(255)
+  firstName                                               String?         @db.VarChar(255)
+  lastName                                                String?         @db.VarChar(255)
+  roq_user_id                                             String          @db.VarChar(255)
+  tenant_id                                               String          @db.VarChar(255)
+  created_at                                              DateTime        @default(now()) @db.Timestamp(6)
+  updated_at                                              DateTime        @default(now()) @db.Timestamp(6)
+  client                                                  client[]
+  export_order_export_order_export_manager_idTouser       export_order[]  @relation("export_order_export_manager_idTouser")
+  export_order_export_order_sales_representative_idTouser export_order[]  @relation("export_order_sales_representative_idTouser")
+  organization                                            organization[]
+  quality_check                                           quality_check[]
+}
